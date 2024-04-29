@@ -29,19 +29,34 @@ productsRouter.get("/item/:id", async (req, res) => {
     }
 })
 
+// Middleware de autorización para verificar el rol de administrador
+const isAdmin = (req, res, next) => {
+    try{
+        const user = req.user;
+        if (user && user.role === "admin") next();
+        else res.status(403).send({error: "Unauthorized"});
+    } catch (error){
+        console.log(error)
+    }
+}
+
 // Subir un nuevo producto (Solo lo podrá hacer el administrador)
-productsRouter.post("/add-product/", (req, res) => {
-    
+productsRouter.post("/add-product/", isAdmin, (req, res) => {
+    try{
+        // TODO
+    } catch (error){
+        res.status(500).send(error.message);
+    }
 })
 
 // Editar un producto (Solo lo podrá hacer el administrador)
-productsRouter.put("/edit/:id", (req, res) => {
-    
+productsRouter.put("/edit/:id", isAdmin, (req, res) => {
+    // TODO
 })
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)
-productsRouter.delete("/delete/:id", (req, res) => {
-    
+productsRouter.delete("/delete/:id", isAdmin, (req, res) => {
+    //TODO
 })
 
 export default productsRouter;
