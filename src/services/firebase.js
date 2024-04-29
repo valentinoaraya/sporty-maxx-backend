@@ -21,7 +21,7 @@ const db = getFirestore(app);
 // Obtener todos los productos
 export async function getProductsFB() {
     const productsSnapshot = await getDocs(collection(db, "products"));
-    const productsArray = productsSnapshot.docs.map(doc => doc.data());
+    const productsArray = productsSnapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
     return productsArray;
 }
 
@@ -29,12 +29,17 @@ export async function getProductsFB() {
 export async function getProductByIdFB(id) {
     const docRef = doc(db, "products", id);
     const docSnap = await getDoc(docRef);
-    return docSnap.data();
+    const product = {...docSnap.data(), id: docSnap.id}; 
+    return product;
 }
 
 // Subir un nuevo producto (Solo lo podrá hacer el administrador)
 export async function addProductFB(product) {
-    // TODO
+    const collectionRef = collection(db, "products"); 
+    await addDoc(collectionRef, product)
+    .then(() => console.log(`Product ${product.nombre} added`))
+    .catch((error) => console.log(error));
+    return "Product added";
 }
 
 // Editar un producto (Solo lo podrá hacer el administrador)
