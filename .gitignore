@@ -1,4 +1,4 @@
 node_modules
 .env
-secrets
-secrets/db-sportymaxx-firebase-adminsdk-bwbs4-999e25739b.json
+/secrets
+/secrets/db-sportymaxx-firebase-adminsdk-bwbs4-999e25739b.json
