@@ -20,12 +20,17 @@ export class ProductManager {
     async uploadImageToCloudinary(pathImage1, pathImage2) {
         const cloudinaryImage1 = await cloudinary.uploader.upload(pathImage1)
         const cloudinaryImage2 = await cloudinary.uploader.upload(pathImage2)
-        const urlImagen =cloudinaryImage1.secure_url
+        const urlImagen = cloudinaryImage1.secure_url
         const urlImagenSecundaria = cloudinaryImage2.secure_url
         return [urlImagen, urlImagenSecundaria]
     }
 
     async addProduct(product) {
+
+        product.precio = parseInt(product.precio);
+        product.stock = parseInt(product.stock);
+        product.categories = product.categories.split(",");
+
         const keys = Object.keys(product);
         const requiredKeys = ["imagen", "imagenSecundaria", "nombre", "precio", "stock", "categories"];
         for (const key of requiredKeys) {
@@ -34,15 +39,14 @@ export class ProductManager {
                 throw new Error(`Missing required field: ${key}`);
             }
         }
-        const [urlImagen, urlImagenSecundaria] = await this.uploadImageToCloudinary(product.imagen, product.imagenSecundaria);
-        product.imagen = urlImagen;
-        product.imagenSecundaria = urlImagenSecundaria;
+
         const values = Object.values(product);
         if (values.some(value => value === undefined || value === " " || value === "")) {
             console.log("No es posible enviar campos vacios");
             throw new Error("Missing required field");
         }
         await addProductFB(product)
+        console.log(product)
         return "Product added";
     }
 }
