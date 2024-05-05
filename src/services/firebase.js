@@ -18,28 +18,42 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // --- Funciones de acceso a la DB --- //
-// Obtener todos los productos
+
+// Obtener productos por categoría
 export async function getProductsFB() {
-    const productsSnapshot = await getDocs(collection(db, "products"));
-    const productsArray = productsSnapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
-    return productsArray;
+    try{
+        const productsSnapshot = await getDocs(collection(db, "products"));
+        const productsArray = productsSnapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
+        return productsArray;
+    }catch (error){
+        console.log(error)
+    }
+    
 }
 
 // Obtener un producto por ID
 export async function getProductByIdFB(id) {
-    const docRef = doc(db, "products", id);
-    const docSnap = await getDoc(docRef);
-    const product = {...docSnap.data(), id: docSnap.id}; 
-    return product;
+    try{
+        const docRef = doc(db, "products", id);
+        const docSnap = await getDoc(docRef);
+        const product = {...docSnap.data(), id: docSnap.id}; 
+        return product;
+    }catch (error){
+        console.log(error)
+    }
 }
 
 // Subir un nuevo producto (Solo lo podrá hacer el administrador)
 export async function addProductFB(product) {
-    const collectionRef = collection(db, "products"); 
-    await addDoc(collectionRef, product)
-    .then(() => console.log(`Product ${product.nombre} added`))
-    .catch((error) => console.log(error));
-    return "Product added";
+    try{
+        const collectionRef = collection(db, "products"); 
+        await addDoc(collectionRef, product)
+        .then(() => console.log(`Product ${product.nombre} added`))
+        .catch((error) => console.log(error));
+        return "Product added";
+    }catch (error){
+        console.log(error)
+    }
 }
 
 // Editar un producto (Solo lo podrá hacer el administrador)
