@@ -1,4 +1,4 @@
-import { getProductsFB, getProductByIdFB, addProductFB } from "../services/firebase.js";
+import { getProductsFB, getProductByIdFB, addProductFB, editProductFB } from "../services/firebase.js";
 import cloudinary from "../services/cloudinary.js";
 
 export class ProductManager {
@@ -63,6 +63,20 @@ export class ProductManager {
             console.log(product)
             return "Product added";
         }catch(error){
+            console.log(error)
+        }
+    }
+
+
+    async editProduct(id, dataProduct) {
+        try{
+            if (dataProduct.precio) dataProduct.precio = parseInt(dataProduct.precio);
+            if (dataProduct.stock) dataProduct.stock = parseInt(dataProduct.stock);
+            if (dataProduct.categories) dataProduct.categories = dataProduct.categories.split(",");
+
+            const response = await editProductFB(id, dataProduct)
+            return response
+        } catch (error) {
             console.log(error)
         }
     }

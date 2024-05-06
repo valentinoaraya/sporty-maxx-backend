@@ -1,6 +1,17 @@
 import "dotenv/config";
 import {initializeApp} from "firebase/app";
-import {getFirestore, doc, addDoc, getDoc, getDocs, collection, query, where, documentId } from "firebase/firestore";
+import {
+    getFirestore, 
+    doc, 
+    addDoc, 
+    getDoc, 
+    getDocs, 
+    collection, 
+    updateDoc,
+    query, 
+    where, 
+    documentId 
+} from "firebase/firestore";
 
 // Configuración para conectarse a la DB
 const firebaseConfig = {
@@ -57,8 +68,16 @@ export async function addProductFB(product) {
 }
 
 // Editar un producto (Solo lo podrá hacer el administrador)
-export async function editProductFB(id, product) {
-    // TODO
+export async function editProductFB(id, data) {
+    try{
+        const docRef = doc(db, "products", id);
+        await updateDoc(docRef, data)
+        .then(() => console.log(`Product ${data.nombre} updated`))
+        .catch((error) => console.log(error));
+        return data
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)

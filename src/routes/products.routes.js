@@ -45,6 +45,8 @@ productsRouter.get("/item/:id", async (req, res) => {
 })
 
 // Middleware de autorización para verificar el rol de administrador
+// Con este middlewre, además, también se parsean los formDatas enviados por el cliente
+// para que el back pueda leerlos como JSON u objetos.
 const isAdmin = (req, res, next) => {
     try{
         console.log("req body: ", req.body)
@@ -92,8 +94,22 @@ productsRouter.post("/add-product",  upload.fields([
 })
 
 // Editar un producto (Solo lo podrá hacer el administrador)
-productsRouter.put("/edit-product/:id", isAdmin, (req, res) => {
-    // TODO
+productsRouter.put("/edit-product/:id", upload.fields([
+    {name: "imagen", maxCount: 1},
+    {name: "imagenSecundaria", maxCount: 1}
+]), isAdmin, (req, res) => {
+    try{
+        const {id} = req.params;
+        const dataProduct = req.body;
+        delete dataProduct.userRole
+        console.log("id: ", id );
+        console.log("dataProduct: ", dataProduct);
+        const response = productManager.editProduct(id, dataProduct);
+        res.status(200).send({message: "Success", data: response});
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error)
+    }
 })
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)
