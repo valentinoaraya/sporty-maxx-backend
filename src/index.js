@@ -6,9 +6,15 @@ import cors from "cors";
 // Initializations
 const app = express();
 
+// Configurations cors
+const corsOptions = {
+    origin: 'http://localhost:3000',
+    optionsSuccessStatus: 200
+}
+
 // Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 
 // Routes
 app.use("/", productsRouter);

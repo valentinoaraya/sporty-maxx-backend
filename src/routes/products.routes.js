@@ -4,7 +4,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs-extra";
 import {uploadImageToCloudinary, uploadImagesToCloudinary, deleteImageFromCloudinary } from "../services/cloudinary.js";
+import admin from "../services/firebase-admin.js";
 
+// Inicializaviones
 const productsRouter = Router();
 const productManager = new ProductManager();
 productsRouter.use(json());
@@ -20,6 +22,31 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({storage: storage});
+
+// Middleware de autorización para verificar el token del usuario
+const verificarTokenFirebase = async (req, res, next) => {
+    const token = req.headers.authorization;
+
+    if (!token){
+        res.status(401).send({error: "Unauthorized"});
+    }
+
+    try{
+        const decodedToken = await admin.auth().verifyIdToken(token.split(' ')[1]);
+        req.usuario = decodedToken;
+        console.log("Decoded token: ", decodedToken);
+        next();
+    } catch (error) {
+        console.log("Error al verificar el token: ", error);
+        res.status(401).send({error: "Unauthorized"});
+    }
+}
+
+const verificarAdmin = async (req, res, next) => {
+    console.log("req.usuario: ", req.usuario);
+    if (req.usuario && req.usuario.role === 'admin') next(); // Permitir acceso si el usuario es administrador
+    else res.status(403).send({error: "Unauthorized"});
+}
 
 // Obtener los productos por categoría
 productsRouter.get("/", async (req, res) => {
@@ -45,24 +72,11 @@ productsRouter.get("/item/:id", async (req, res) => {
     }
 })
 
-// Middleware de autorización para verificar el rol de administrador
-// Con este middlewre, además, también se parsean los formDatas enviados por el cliente
-// para que el back pueda leerlos como JSON u objetos.
-const isAdmin = (req, res, next) => {
-    try{
-        const {userRole} = req.body;
-        if (userRole === 'admin') next();
-        else res.status(403).send({error: "Unauthorized"});
-    } catch (error){
-        console.log(error)
-    }
-}
-
 // Subir un nuevo producto (Solo lo podrá hacer el administrador)
 productsRouter.post("/add-product",  upload.fields([
     {name: "imagen", maxCount: 1},
     {name: "imagenSecundaria", maxCount: 1}
-]), isAdmin, async (req, res) => {
+]), verificarTokenFirebase, verificarAdmin, async (req, res) => {
     try{
         //Creo el producto
         const {nombre, precio, stock, categories} = req.body;
@@ -99,11 +113,10 @@ productsRouter.post("/add-product",  upload.fields([
 productsRouter.put("/edit-product/:id", upload.fields([
     {name: "imagen", maxCount: 1},
     {name: "imagenSecundaria", maxCount: 1}
-]), isAdmin, async (req, res) => {
+]), verificarTokenFirebase, verificarAdmin, async (req, res) => {
     try{
         const {id} = req.params;
         const dataProduct = req.body;
-        delete dataProduct.userRole
         console.log("id: ", id );
         console.log("dataProduct: ", dataProduct);
 
@@ -163,7 +176,7 @@ productsRouter.put("/edit-product/:id", upload.fields([
 })
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)
-productsRouter.post("/delete-product/:id", isAdmin, async (req, res) => {
+productsRouter.delete("/delete-product/:id", verificarTokenFirebase, verificarAdmin, async (req, res) => {
     try{
         const {id} = req.params;
         const response = await productManager.deleteProduct(id);
