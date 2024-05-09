@@ -1,4 +1,4 @@
-import { getProductsFB, getProductByIdFB, addProductFB, editProductFB } from "../services/firebase.js";
+import { getProductsFB, getProductByIdFB, addProductFB, editProductFB, deleteProductFB } from "../services/firebase.js";
 
 export class ProductManager {
     constructor() {
@@ -60,6 +60,16 @@ export class ProductManager {
             if (dataProduct.categories) dataProduct.categories = dataProduct.categories.split(",");
 
             const response = await editProductFB(id, dataProduct)
+            return response
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async deleteProduct(id) {
+        try{
+            // obtenemos el producto para eliminar las imágenes de cloudinary
+            const response = await deleteProductFB(id)
             return response
         } catch (error) {
             console.log(error)

@@ -8,6 +8,7 @@ import {
     getDocs, 
     collection, 
     updateDoc,
+    deleteDoc,
     query, 
     where, 
     documentId 
@@ -79,5 +80,15 @@ export async function editProductFB(id, data) {
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)
 export async function deleteProductFB(id) {
-    // TODO
+    try{
+        // Primero obtengo el producto
+        const deletedProduct = await getProductByIdFB(id)
+
+        // Elimino el producto y lo retorno
+        const docRef = doc(db, "products", id);
+        await deleteDoc(docRef)
+        return deletedProduct
+    } catch (error) {
+        console.log(error)
+    }    
 }

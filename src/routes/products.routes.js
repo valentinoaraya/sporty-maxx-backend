@@ -163,8 +163,20 @@ productsRouter.put("/edit-product/:id", upload.fields([
 })
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)
-productsRouter.delete("/delete/:id", isAdmin, (req, res) => {
-    //TODO
+productsRouter.post("/delete-product/:id", isAdmin, async (req, res) => {
+    try{
+        const {id} = req.params;
+        const response = await productManager.deleteProduct(id);
+
+        // una vez eliminado el producto elimino sus imágenes de cloudinary
+        await deleteImageFromCloudinary(response.imagen.public_id);
+        await deleteImageFromCloudinary(response.imagenSecundaria.public_id);
+         
+        res.status(200).send({message: "Success", data: response});
+    } catch (error){
+        console.log(error)
+        res.status(500).send(error);
+    }
 })
 
 export default productsRouter;
