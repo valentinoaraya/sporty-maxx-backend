@@ -58,10 +58,8 @@ export async function getProductByIdFB(id) {
 export async function addProductFB(product) {
     try{
         const collectionRef = collection(db, "products"); 
-        await addDoc(collectionRef, product)
-        .then(() => console.log(`Product ${product.nombre} added`))
-        .catch((error) => console.log(error));
-        return "Product added";
+        await addDoc(collectionRef, product)        
+        return `Producto ${product.nombre} agregado correctamente a Firebase`;
     }catch (error){
         console.log(error)
     }
@@ -72,8 +70,7 @@ export async function editProductFB(id, data) {
     try{
         const docRef = doc(db, "products", id);
         await updateDoc(docRef, data)
-        .then(() => console.log(`Product ${data.nombre} updated`))
-        .catch((error) => console.log(error));
+        console.log(`Product updated`)
         return data
     } catch (error) {
         console.log(error)

@@ -3,6 +3,7 @@ import { ProductManager } from "../db-managers/ProductManager.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs-extra";
+import {uploadImageToCloudinary, uploadImagesToCloudinary, deleteImageFromCloudinary } from "../services/cloudinary.js";
 
 const productsRouter = Router();
 const productManager = new ProductManager();
@@ -39,8 +40,8 @@ productsRouter.get("/item/:id", async (req, res) => {
         const product = await productManager.getProductById(id);
         res.status(200).send({message: "Success", data: product || "Product not found"});
     }catch(error){
-        res.status(500).send(error.message);
         console.log(error)
+        res.status(500).send(error.message);
     }
 })
 
@@ -49,10 +50,7 @@ productsRouter.get("/item/:id", async (req, res) => {
 // para que el back pueda leerlos como JSON u objetos.
 const isAdmin = (req, res, next) => {
     try{
-        console.log("req body: ", req.body)
         const {userRole} = req.body;
-        console.log(userRole)
-        console.log( userRole === 'admin')
         if (userRole === 'admin') next();
         else res.status(403).send({error: "Unauthorized"});
     } catch (error){
@@ -73,20 +71,24 @@ productsRouter.post("/add-product",  upload.fields([
         //Obtengo las imágenes
         const objectImage = req.files.imagen[0];
         const objectSecundaryImage = req.files.imagenSecundaria[0];
-        console.log(objectImage)
-        console.log(objectSecundaryImage)
-
+        
         //Subo las imagenes y obtengo sus URLs
-        const arrayURLs = await productManager.uploadImageToCloudinary(objectImage.path, objectSecundaryImage.path);
-        console.log(arrayURLs)
-        product.imagen = arrayURLs[0];
-        product.imagenSecundaria = arrayURLs[1];
+        const images = await uploadImagesToCloudinary(objectImage.path, objectSecundaryImage.path);
+        product.imagen = {
+            public_id: images[0].public_id,
+            url: images[0].secure_url
+        };
+        product.imagenSecundaria = {
+            public_id: images[1].public_id,
+            url: images[1].secure_url
+        };
 
         //Agrego el producto a la base de datos y borro las imágenes de uploads
-        await productManager.addProduct(product);
+        const response = await productManager.addProduct(product)
         await fs.unlink(objectImage.path);
         await fs.unlink(objectSecundaryImage.path);
-        res.status(200).send({message: "Success"});
+
+        res.status(200).send({message: response});
     } catch (error){
         console.log(error)
         res.status(500).send(error);
@@ -97,14 +99,62 @@ productsRouter.post("/add-product",  upload.fields([
 productsRouter.put("/edit-product/:id", upload.fields([
     {name: "imagen", maxCount: 1},
     {name: "imagenSecundaria", maxCount: 1}
-]), isAdmin, (req, res) => {
+]), isAdmin, async (req, res) => {
     try{
         const {id} = req.params;
         const dataProduct = req.body;
         delete dataProduct.userRole
         console.log("id: ", id );
         console.log("dataProduct: ", dataProduct);
-        const response = productManager.editProduct(id, dataProduct);
+
+        //Obtengo las imágenes, si hay imágenes quiere decir que debo obtener las imágnes viejas y borrarlas de cloudinary
+        if (req.files.imagen){
+            const objectImage = req.files.imagen[0];
+
+            //obtengo la imagen vieja y la elimino
+            const product = await productManager.getProductById(id);
+            const idImage = product.imagen.public_id;
+            await deleteImageFromCloudinary(idImage);
+
+            //agrego las imágenes neuvas
+            const image = await uploadImageToCloudinary(objectImage.path);
+            dataProduct.imagen = {
+                public_id: image.public_id,
+                url: image.secure_url
+            }
+
+            //borro la imagen de uploads
+            await fs.unlink(objectImage.path);
+
+            console.log("objectImage: ", objectImage);
+        } else {
+            console.log("No hay imagen en el form")
+        }
+
+        if (req.files.imagenSecundaria){
+            const objectSecundaryImage = req.files.imagenSecundaria[0];
+
+            //obtengo la imagen vieja y la elimino
+            const product = await productManager.getProductById(id);
+            const idImage = product.imagenSecundaria.public_id;
+            await deleteImageFromCloudinary(idImage);
+
+            //agrego las imágenes neuvas
+            const image = await uploadImageToCloudinary(objectSecundaryImage.path);
+            dataProduct.imagenSecundaria = {
+                public_id: image.public_id,
+                url: image.secure_url
+            }
+
+            //borro la imagen de uploads
+            await fs.unlink(objectSecundaryImage.path);
+
+            console.log("objectSecundaryImage: ", objectSecundaryImage);
+        } else {
+            console.log("No hay imagen secundaria en el form")
+        }
+
+        const response = await productManager.editProduct(id, dataProduct);
         res.status(200).send({message: "Success", data: response});
     } catch (error) {
         console.log(error)

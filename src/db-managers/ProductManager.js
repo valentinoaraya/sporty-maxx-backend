@@ -1,5 +1,4 @@
 import { getProductsFB, getProductByIdFB, addProductFB, editProductFB } from "../services/firebase.js";
-import cloudinary from "../services/cloudinary.js";
 
 export class ProductManager {
     constructor() {
@@ -26,19 +25,6 @@ export class ProductManager {
         }
     }
 
-    async uploadImageToCloudinary(pathImage1, pathImage2) {
-        try{
-            const cloudinaryImage1 = await cloudinary.uploader.upload(pathImage1)
-            const cloudinaryImage2 = await cloudinary.uploader.upload(pathImage2)
-            const urlImagen = cloudinaryImage1.secure_url
-            const urlImagenSecundaria = cloudinaryImage2.secure_url
-            return [urlImagen, urlImagenSecundaria]
-        } catch (error) {
-            console.log(error)
-            throw new Error(error)
-        }
-    }
-
     async addProduct(product) {
         try{
             product.precio = parseInt(product.precio);
@@ -59,14 +45,13 @@ export class ProductManager {
                 console.log("No es posible enviar campos vacios");
                 throw new Error("Missing required field");
             }
-            await addProductFB(product)
-            console.log(product)
-            return "Product added";
+
+            const response = await addProductFB(product);
+            return response;
         }catch(error){
             console.log(error)
         }
     }
-
 
     async editProduct(id, dataProduct) {
         try{
