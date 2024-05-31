@@ -46,31 +46,19 @@ export class ProductManager {
                 throw new Error("Missing required field");
             }
 
-            const response = await addProductFB(product);
-            return response;
+            return product
         }catch(error){
             console.log(error)
         }
     }
 
-    async editProduct(id, dataProduct) {
+    async editProduct(dataProduct) {
         try{
             if (dataProduct.precio) dataProduct.precio = parseInt(dataProduct.precio);
             if (dataProduct.stock) dataProduct.stock = parseInt(dataProduct.stock);
             if (dataProduct.categories) dataProduct.categories = dataProduct.categories.split(",");
 
-            const response = await editProductFB(id, dataProduct)
-            return response
-        } catch (error) {
-            console.log(error)
-        }
-    }
-
-    async deleteProduct(id) {
-        try{
-            // obtenemos el producto para eliminar las imágenes de cloudinary
-            const response = await deleteProductFB(id)
-            return response
+            return dataProduct
         } catch (error) {
             console.log(error)
         }
