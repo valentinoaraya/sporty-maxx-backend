@@ -6,19 +6,12 @@ import cors from "cors";
 // Initializations
 const app = express();
 
-// Configurations cors
-const corsOptions = {
-    origin: 'http://localhost:3000',
-    optionsSuccessStatus: 200
-}
-
 // Middlewares
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Routes
 app.use("/", productsRouter);
-
 
 // Listen server
 app.listen(PORT, () => console.log("Server running on port " + PORT));

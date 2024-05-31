@@ -73,10 +73,9 @@ productsRouter.get("/item/:id", async (req, res) => {
 })
 
 // Subir un nuevo producto (Solo lo podrá hacer el administrador)
-productsRouter.post("/add-product",  upload.fields([
-    {name: "imagen", maxCount: 1},
-    {name: "imagenSecundaria", maxCount: 1}
-]), verificarTokenFirebase, verificarAdmin, async (req, res) => {
+productsRouter.post("/add-product", verificarTokenFirebase, verificarAdmin, 
+    upload.fields([ {name: "imagen", maxCount: 1}, {name: "imagenSecundaria", maxCount: 1}]),
+    async (req, res) => {
     try{
         //Creo el producto
         const {nombre, precio, stock, categories} = req.body;
@@ -98,9 +97,9 @@ productsRouter.post("/add-product",  upload.fields([
         };
 
         //Agrego el producto a la base de datos y borro las imágenes de uploads
-        const response = await productManager.addProduct(product)
         await fs.unlink(objectImage.path);
         await fs.unlink(objectSecundaryImage.path);
+        const response = await productManager.addProduct(product)
 
         res.status(200).send({message: response});
     } catch (error){

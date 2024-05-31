@@ -9,9 +9,6 @@ import {
     collection, 
     updateDoc,
     deleteDoc,
-    query, 
-    where, 
-    documentId 
 } from "firebase/firestore";
 
 // Configuración para conectarse a la DB
