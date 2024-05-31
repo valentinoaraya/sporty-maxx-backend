@@ -33,19 +33,17 @@ const verificarTokenFirebase = async (req, res, next) => {
 
     try{
         const decodedToken = await admin.auth().verifyIdToken(token.split(' ')[1]);
-        req.usuario = decodedToken;
-        console.log("Decoded token: ", decodedToken);
-        next();
+        if (decodedToken && decodedToken.role === 'admin') {
+            req.user = decodedToken;
+            next();
+        } else {
+            res.status(403).send({error: "Unauthorized"});
+        }
+
     } catch (error) {
         console.log("Error al verificar el token: ", error);
         res.status(401).send({error: "Unauthorized"});
     }
-}
-
-const verificarAdmin = async (req, res, next) => {
-    console.log("req.usuario: ", req.usuario);
-    if (req.usuario && req.usuario.role === 'admin') next(); // Permitir acceso si el usuario es administrador
-    else res.status(403).send({error: "Unauthorized"});
 }
 
 // Obtener los productos por categoría
@@ -73,7 +71,7 @@ productsRouter.get("/item/:id", async (req, res) => {
 })
 
 // Subir un nuevo producto (Solo lo podrá hacer el administrador)
-productsRouter.post("/add-product", verificarTokenFirebase, verificarAdmin, 
+productsRouter.post("/add-product", verificarTokenFirebase, 
     upload.fields([ {name: "imagen", maxCount: 1}, {name: "imagenSecundaria", maxCount: 1}]),
     async (req, res) => {
     try{
@@ -99,8 +97,8 @@ productsRouter.post("/add-product", verificarTokenFirebase, verificarAdmin,
         //Agrego el producto a la base de datos y borro las imágenes de uploads
         await fs.unlink(objectImage.path);
         await fs.unlink(objectSecundaryImage.path);
-        const response = await productManager.addProduct(product)
-
+        const newProduct = await productManager.addProduct(product)
+        const response = await admin.firestore().collection("products").add(newProduct);
         res.status(200).send({message: response});
     } catch (error){
         console.log(error)
@@ -112,13 +110,11 @@ productsRouter.post("/add-product", verificarTokenFirebase, verificarAdmin,
 productsRouter.put("/edit-product/:id", upload.fields([
     {name: "imagen", maxCount: 1},
     {name: "imagenSecundaria", maxCount: 1}
-]), verificarTokenFirebase, verificarAdmin, async (req, res) => {
+]), verificarTokenFirebase, async (req, res) => {
     try{
         const {id} = req.params;
         const dataProduct = req.body;
-        console.log("id: ", id );
-        console.log("dataProduct: ", dataProduct);
-
+        
         //Obtengo las imágenes, si hay imágenes quiere decir que debo obtener las imágnes viejas y borrarlas de cloudinary
         if (req.files.imagen){
             const objectImage = req.files.imagen[0];
@@ -137,10 +133,6 @@ productsRouter.put("/edit-product/:id", upload.fields([
 
             //borro la imagen de uploads
             await fs.unlink(objectImage.path);
-
-            console.log("objectImage: ", objectImage);
-        } else {
-            console.log("No hay imagen en el form")
         }
 
         if (req.files.imagenSecundaria){
@@ -160,13 +152,10 @@ productsRouter.put("/edit-product/:id", upload.fields([
 
             //borro la imagen de uploads
             await fs.unlink(objectSecundaryImage.path);
-
-            console.log("objectSecundaryImage: ", objectSecundaryImage);
-        } else {
-            console.log("No hay imagen secundaria en el form")
         }
 
-        const response = await productManager.editProduct(id, dataProduct);
+        const newDataProduct = await productManager.editProduct(dataProduct);
+        const response = await admin.firestore().collection("products").doc(id).update(newDataProduct);
         res.status(200).send({message: "Success", data: response});
     } catch (error) {
         console.log(error)
@@ -175,14 +164,19 @@ productsRouter.put("/edit-product/:id", upload.fields([
 })
 
 // Eliminar un producto (Solo lo podrá hacer el administrador)
-productsRouter.delete("/delete-product/:id", verificarTokenFirebase, verificarAdmin, async (req, res) => {
+productsRouter.delete("/delete-product/:id", verificarTokenFirebase, async (req, res) => {
     try{
         const {id} = req.params;
-        const response = await productManager.deleteProduct(id);
 
+        // Obtengo el producto que se eliminará
+        const deletedProduct = await productManager.getProductById(id);
+
+        // Elimino el producto de la base de datos
+        const response = await admin.firestore().collection("products").doc(id).delete();
+        
         // una vez eliminado el producto elimino sus imágenes de cloudinary
-        await deleteImageFromCloudinary(response.imagen.public_id);
-        await deleteImageFromCloudinary(response.imagenSecundaria.public_id);
+        await deleteImageFromCloudinary(deletedProduct.imagen.public_id);
+        await deleteImageFromCloudinary(deletedProduct.imagenSecundaria.public_id);
          
         res.status(200).send({message: "Success", data: response});
     } catch (error){
