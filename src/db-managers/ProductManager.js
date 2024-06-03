@@ -1,4 +1,4 @@
-import { getProductsFB, getProductByIdFB, addProductFB, editProductFB, deleteProductFB } from "../services/firebase.js";
+import { getProductsFB, getProductByIdFB } from "../services/firebase.js";
 
 export class ProductManager {
     constructor() {
@@ -30,9 +30,10 @@ export class ProductManager {
             product.precio = parseInt(product.precio);
             product.stock = parseInt(product.stock);
             product.categories = product.categories.split(",");
+            product.talles = product.talles.split(",");
     
             const keys = Object.keys(product);
-            const requiredKeys = ["imagen", "imagenSecundaria", "nombre", "precio", "stock", "categories"];
+            const requiredKeys = ["imagen", "imagenSecundaria", "nombre", "precio", "stock", "categories", "talles"];
             for (const key of requiredKeys) {
                 if (!keys.includes(key)) {
                     console.log("Missing required field: ", key);
@@ -41,7 +42,7 @@ export class ProductManager {
             }
     
             const values = Object.values(product);
-            if (values.some(value => value === undefined || value === " " || value === "")) {
+            if (values.some(value => value === undefined || value === " " || value === "" || value === null)) {
                 console.log("No es posible enviar campos vacios");
                 throw new Error("Missing required field");
             }
@@ -57,6 +58,7 @@ export class ProductManager {
             if (dataProduct.precio) dataProduct.precio = parseInt(dataProduct.precio);
             if (dataProduct.stock) dataProduct.stock = parseInt(dataProduct.stock);
             if (dataProduct.categories) dataProduct.categories = dataProduct.categories.split(",");
+            if (dataProduct.talles) dataProduct.talles = dataProduct.talles.split(",");
 
             return dataProduct
         } catch (error) {

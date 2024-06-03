@@ -76,8 +76,8 @@ productsRouter.post("/add-product", verificarTokenFirebase,
     async (req, res) => {
     try{
         //Creo el producto
-        const {nombre, precio, stock, categories} = req.body;
-        const product = {nombre, precio, stock, categories};
+        const {nombre, precio, stock, categories, talles} = req.body;
+        const product = {nombre, precio, stock, categories, talles};
 
         //Obtengo las imágenes
         const objectImage = req.files.imagen[0];
