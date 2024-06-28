@@ -3,6 +3,7 @@ import admin from "../services/firebase-admin.js";
 import { verificarTokenFirebase } from "../middlewares/verifyTokenMiddleware.js";
 import { rateLimiter } from "../middlewares/ratelimitMiddleware.js";
 import { createBuyOrder } from "../services/firebase.js";
+import { sendEmail } from "../services/nodemailer.js";
 
 const ordersRouter = Router();
 ordersRouter.use(json());
@@ -17,9 +18,6 @@ ordersRouter.get("/", verificarTokenFirebase, async (req, res) => {
         res.status(500).send({ error: error.message });
     }
 });
-
-// Obtener las órdenes de un usuario
-//ordersRouter.get("/user-orders")
 
 // Subir órdenes a la base de datos
 ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
@@ -50,14 +48,27 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
         }
 
         // 3. Subir la orden a la base de datos
+        let newOrder = null
         if (buyer.id){
-            await createBuyOrder(order, buyer.id)
+            newOrder = await createBuyOrder(order, buyer.id)
         } else {
-            await createBuyOrder(order, null)
+            newOrder = await createBuyOrder(order, null)
         }
 
         // 4. Enviar correo al comprador y al vendedor
-        // TODO
+        // Vendedor
+        const subjectVendedor = "Alguien ha creado una nueva orden de compra"
+        const textoVendedor = "Texto hacia el vendedor"
+        const htmlVendedor = `<h1>Hola Vendedor!</h1>
+                              <h2>El usuario ${buyer.nombre} ha creado la orden de compra: #${newOrder.id}</h2>`
+        await sendEmail("varayaamaya@gmail.com", subjectVendedor, textoVendedor, htmlVendedor)
+
+        // Comprador
+        const subjectComprador = "Has creado una orden de compra"
+        const textoComprador = "Texto hacia el comprador"
+        const htmlComprador = `<h1>Hola ${buyer.nombre}</h1>
+                               <h2>Se ha creado tu orden de compra: #${newOrder.id}</h2>`
+        await sendEmail(`${buyer.email}`, subjectComprador, textoComprador, htmlComprador)
 
         res.status(200)
     } catch (error) {
