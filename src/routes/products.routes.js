@@ -5,6 +5,7 @@ import path from "path";
 import fs from "fs-extra";
 import {uploadImageToCloudinary, uploadImagesToCloudinary, deleteImageFromCloudinary } from "../services/cloudinary.js";
 import admin from "../services/firebase-admin.js";
+import { verificarTokenFirebase } from "../middlewares/verifyTokenMiddleware.js";
 
 // Inicializaviones
 const productsRouter = Router();
@@ -22,29 +23,6 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({storage: storage});
-
-// Middleware de autorización para verificar el token del usuario
-const verificarTokenFirebase = async (req, res, next) => {
-    const token = req.headers.authorization;
-
-    if (!token){
-        res.status(401).send({error: "Unauthorized"});
-    }
-
-    try{
-        const decodedToken = await admin.auth().verifyIdToken(token.split(' ')[1]);
-        if (decodedToken && decodedToken.role === 'admin') {
-            req.user = decodedToken;
-            next();
-        } else {
-            res.status(403).send({error: "Unauthorized"});
-        }
-
-    } catch (error) {
-        console.log("Error al verificar el token: ", error);
-        res.status(401).send({error: "Unauthorized"});
-    }
-}
 
 // Obtener los productos por categoría
 productsRouter.get("/", async (req, res) => {

@@ -9,6 +9,11 @@ import {
     collection, 
     updateDoc,
     deleteDoc,
+    query,
+    where,
+    documentId,
+    writeBatch,
+    arrayUnion,
 } from "firebase/firestore";
 
 // Configuración para conectarse a la DB
@@ -88,4 +93,55 @@ export async function deleteProductFB(id) {
     } catch (error) {
         console.log(error)
     }    
+}
+
+export const createBuyOrder = async (order, buyerId)=> {
+    try{
+        const productsRef = collection(db, "products")
+        const orderRef = collection(db, "orders")
+
+        // Busco los ids de los productos a comprar
+        const ids = order.products.map(product => product.id)
+
+        // Traigo esos productos de la base de datos
+        const q = query(productsRef, where(documentId(), "in", ids))
+        const querySnapshot = await getDocs(q)
+
+        // Uso batch para actualizar el stock de los productos
+        const batch = writeBatch(db)
+
+        querySnapshot.docs.forEach(doc => {
+            const stockDisponible = doc.data().stock
+            const productInCart = order.products.find(product => product.id === doc.id)
+            const quantity = productInCart.count
+            if (stockDisponible < quantity){
+                console.log("No hay stock suficiente");
+                throw new Error("No hay stock suficiente")
+            } else {
+                batch.update(doc.ref, {stock: stockDisponible - quantity})
+            }
+        })
+
+        await batch.commit()
+        const newOrder = await addDoc(orderRef, order)
+
+        if (buyerId){
+            const userRef = collection(db, "users")
+            const q = query(userRef, where("idUser", "==", buyerId))
+            const querySnapshot = await getDocs(q)
+            const docRef = querySnapshot.docs[0].ref
+            await updateDoc(docRef, {
+                orders: arrayUnion({
+                    date: order.date,
+                    total: order.total,
+                    products: order.products,
+                    id: newOrder.id
+                })
+            })
+        }
+        console.log("Orden creada correctamente");
+        return newOrder
+    } catch (error) {
+        console.log(error)
+    }
 }
