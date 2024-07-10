@@ -57,20 +57,43 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
 
         // 4. Enviar correo al comprador y al vendedor
         // Vendedor
-        const subjectVendedor = "Alguien ha creado una nueva orden de compra"
+        const subjectVendedor = `${buyer.nombre} ha creado una nueva orden de compra`
         const textoVendedor = "Texto hacia el vendedor"
         const htmlVendedor = `<h1>Hola Vendedor!</h1>
-                              <h2>El usuario ${buyer.nombre} ha creado la orden de compra: #${newOrder.id}</h2>`
+                              <p>El usuario ${buyer.nombre} ha creado la orden de compra: <span style="font-weight: 900" >#${newOrder.id}</span></p>
+                              <h3>Productos: </h3>
+                              <ul>
+                                ${
+                                    order.products.map((product)=>{
+                                        return `<li>
+                                            <p>${product.nombre} X${product.count}</p>
+                                            <p>Talle: ${product.talle}</p>
+                                            <p>Precio: ${product.precio*product.count}</p>
+                                        </li>`
+                                    }).join('')
+                                }
+                              </ul>
+                              <p>Total de la compra: ${order.total}</p>
+                              <h3>Datos del comprador: </h3>
+                              <p>Nombre: ${buyer.nombre}</p>
+                              <p>Email: ${buyer.email}</p>
+                              <p>Teléfono: ${buyer.telefono}</p>
+                              <p>Direcciíon: ${buyer.direccion}</p>`
+
         await sendEmail("varayaamaya@gmail.com", subjectVendedor, textoVendedor, htmlVendedor)
 
         // Comprador
-        const subjectComprador = "Has creado una orden de compra"
+        const subjectComprador = "Orden de compra creada con éxito."
         const textoComprador = "Texto hacia el comprador"
         const htmlComprador = `<h1>Hola ${buyer.nombre}</h1>
-                               <h2>Se ha creado tu orden de compra: #${newOrder.id}</h2>`
+                               <p>Se ha creado tu orden de compra: <span style="font-weight: 900" >#${newOrder.id}</span></p>
+                               <p>Porfavor, cuando realices el pago envía el comprobante al siguiente Whatsapp:</p>
+                               <p>Whatsapp del vendedor.</p>
+                               <h3>Muchas gracias por confiar!</h3>`
+
         await sendEmail(`${buyer.email}`, subjectComprador, textoComprador, htmlComprador)
 
-        res.status(200)
+        res.status(200).send({data: order})
     } catch (error) {
         res.status(500).send({error: error.message})
     }
