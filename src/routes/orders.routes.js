@@ -12,7 +12,7 @@ ordersRouter.use(json());
 ordersRouter.get("/", verificarTokenFirebase, async (req, res) => {
     try {
         const ordersSanpshot = await admin.firestore().collection("orders").get();
-        const orders = ordersSanpshot.docs.map((doc) => doc.data());
+        const orders = ordersSanpshot.docs.map((doc) => ({...doc.data(), id: doc.id}));
         res.status(200).send({ data: orders });
     } catch (error) {
         res.status(500).send({ error: error.message });
@@ -98,6 +98,5 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
         res.status(500).send({error: error.message})
     }
 })
-
 
 export default ordersRouter;
