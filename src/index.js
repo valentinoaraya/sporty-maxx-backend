@@ -3,6 +3,7 @@ import { PORT } from "./config.js";
 import productsRouter from "./routes/products.routes.js";
 import cors from "cors";
 import ordersRouter from "./routes/orders.routes.js";
+import paymentRouter from "./routes/payment.routes.js";
 
 // Initializations
 const app = express();
@@ -16,6 +17,7 @@ app.use(cors({
 // Routes
 app.use("/", productsRouter);
 app.use("/orders", ordersRouter);
+app.use("/payments", paymentRouter)
 
 // Listen server
 app.listen(PORT, () => console.log("Server running on port " + PORT));

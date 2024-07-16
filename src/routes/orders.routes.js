@@ -73,7 +73,7 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
                                     }).join('')
                                 }
                               </ul>
-                              <p>Total de la compra: ${order.total}</p>
+                              <p>Total de la compra: $${order.total}</p>
                               <h3>Datos del comprador: </h3>
                               <p>Nombre: ${buyer.nombre}</p>
                               <p>Email: ${buyer.email}</p>
