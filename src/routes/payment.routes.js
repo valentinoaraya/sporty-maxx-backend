@@ -11,7 +11,7 @@ paymentRouter.post("/create-preference", async (req,res) => {
         const body = {
             items: req.body.productsToSend,
             back_urls: {
-                success: "https://sporty-maxx.vercel.app/", // Cuando termina el pago exitosamente
+                success: "https://sporty-maxx.vercel.app/successful-purchase", // Cuando termina el pago exitosamente
                 failure: "https://sporty-maxx.vercel.app/", // Error o el usuario presiona en "volver al sitio"
                 pending: "https://sporty-maxx.vercel.app/"
             },

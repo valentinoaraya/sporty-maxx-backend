@@ -68,7 +68,7 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
                                         return `<li>
                                             <p>${product.nombre} X${product.count}</p>
                                             <p>Talle: ${product.talle}</p>
-                                            <p>Precio: ${product.precio*product.count}</p>
+                                            <p>Precio: $${product.precio*product.count}</p>
                                         </li>`
                                     }).join('')
                                 }
@@ -78,7 +78,9 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
                               <p>Nombre: ${buyer.nombre}</p>
                               <p>Email: ${buyer.email}</p>
                               <p>Teléfono: ${buyer.telefono}</p>
-                              <p>Direcciíon: ${buyer.direccion}</p>`
+                              <p>Direcciíon: ${buyer.direccion}</p>
+                              <p>Medio de pago: ${buyer.medioDePago}</p>
+                              <p>Estado del pago: ${buyer.estadoDePago}</p>`
 
         await sendEmail("varayaamaya@gmail.com", subjectVendedor, textoVendedor, htmlVendedor)
 
