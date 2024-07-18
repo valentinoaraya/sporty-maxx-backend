@@ -59,7 +59,7 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
         // Vendedor
         const subjectVendedor = `${buyer.nombre} ha creado una nueva orden de compra`
         const textoVendedor = "Texto hacia el vendedor"
-        const htmlVendedor = `<h1>Hola Vendedor!</h1>
+        const htmlVendedor = `<h1>Hola Matías!</h1>
                               <p>El usuario ${buyer.nombre} ha creado la orden de compra: <span style="font-weight: 900" >#${newOrder.id}</span></p>
                               <h3>Productos: </h3>
                               <ul>
@@ -78,11 +78,11 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
                               <p>Nombre: ${buyer.nombre}</p>
                               <p>Email: ${buyer.email}</p>
                               <p>Teléfono: ${buyer.telefono}</p>
-                              <p>Direcciíon: ${buyer.direccion}</p>
+                              <p>Direccíon: ${buyer.direccion}</p>
                               <p>Medio de pago: ${buyer.medioDePago}</p>
                               <p>Estado del pago: ${buyer.estadoDePago}</p>`
 
-        await sendEmail("varayaamaya@gmail.com", subjectVendedor, textoVendedor, htmlVendedor)
+        await sendEmail("vmvillegas36@gmail.com", subjectVendedor, textoVendedor, htmlVendedor)
 
         // Comprador
         const subjectComprador = "Orden de compra creada con éxito."
@@ -90,7 +90,7 @@ ordersRouter.post("/add-order", rateLimiter, async (req,res)=>{
         const htmlComprador = `<h1>Hola ${buyer.nombre}</h1>
                                <p>Se ha creado tu orden de compra: <span style="font-weight: 900" >#${newOrder.id}</span></p>
                                <p>Porfavor, cuando realices el pago envía el comprobante al siguiente Whatsapp:</p>
-                               <p>Whatsapp del vendedor.</p>
+                               <p>Whatsapp: +54 2625648229</p>
                                <h3>Muchas gracias por confiar!</h3>`
 
         await sendEmail(`${buyer.email}`, subjectComprador, textoComprador, htmlComprador)
