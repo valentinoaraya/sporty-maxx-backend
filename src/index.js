@@ -17,7 +17,12 @@ app.use(cors({
 // Routes
 app.use("/", productsRouter);
 app.use("/orders", ordersRouter);
-app.use("/payments", paymentRouter)
+app.use("/payments", paymentRouter);
+
+// Endpoint para mantener el servidor activo
+app.get("/ping", (req,res)=>{
+    res.status(200).send("Pong!")    
+})
 
 // Listen server
 app.listen(PORT, () => console.log("Server running on port " + PORT));
